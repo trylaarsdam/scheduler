@@ -22,9 +22,37 @@
             <v-sheet rounded="lg" dark>
               <v-list color="transparent" dark>
                 <v-list-item><h2>Your Quota</h2></v-list-item>
-                <v-list-item v-for="n in 5" :key="n" link dark>
+                <v-list-item link dark>
                   <v-list-item-content>
-                    <v-list-item-title> List Item {{ n }} </v-list-item-title>
+                    <v-list-item-title> Lathe: 1hr/2hr </v-list-item-title>
+                    <v-progress-linear
+                      color="teal"
+                      buffer-value="0"
+                      value="50"
+                      stream
+                    ></v-progress-linear>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link dark>
+                  <v-list-item-content>
+                    <v-list-item-title> Mill: 2hr/2hr </v-list-item-title>
+                    <v-progress-linear
+                      color="teal"
+                      buffer-value="0"
+                      value="100"
+                      stream
+                    ></v-progress-linear>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item link dark>
+                  <v-list-item-content>
+                    <v-list-item-title> CNC: 0hr/2hr </v-list-item-title>
+                    <v-progress-linear
+                      color="teal"
+                      buffer-value="0"
+                      value="0"
+                      stream
+                    ></v-progress-linear>
                   </v-list-item-content>
                 </v-list-item>
 
@@ -85,7 +113,7 @@
                     </v-btn>
                   </template>
                   <v-list>
-                  <v-list-item @click="machine = 'all'">
+                    <v-list-item @click="machine = 'all'">
                       <v-list-item-title>All Machines</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="machine = 'lathe'">
@@ -93,6 +121,9 @@
                     </v-list-item>
                     <v-list-item @click="machine = 'mill'">
                       <v-list-item-title>Mill</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="machine = 'cnc'">
+                      <v-list-item-title>CNC</v-list-item-title>
                     </v-list-item>
                   </v-list>
                 </v-menu>
@@ -119,15 +150,12 @@
                 :activator="selectedElement"
                 offset-x
               >
-                <v-card color="grey lighten-4" min-width="350px" flat>
+                <v-card min-width="350px" flat dark>
                   <v-toolbar :color="selectedEvent.color" dark>
                     <v-toolbar-title
                       v-html="selectedEvent.name"
                     ></v-toolbar-title>
                     <v-spacer></v-spacer>
-                    <v-btn icon>
-                      <v-icon>mdi-heart</v-icon>
-                    </v-btn>
                     <v-btn icon>
                       <v-icon>mdi-dots-vertical</v-icon>
                     </v-btn>
@@ -139,10 +167,15 @@
                     >
                   </v-card-text>
                   <v-card-actions>
-                    <v-btn text color="primary" @click="selectedOpen = false">
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="selectedOpen = false"
+                      @click.stop="dialog = true"
+                    >
                       Reserve
                     </v-btn>
-                    <v-btn text color="secondary" @click="selectedOpen = false">
+                    <v-btn text dark color="red" @click="selectedOpen = false">
                       Cancel
                     </v-btn>
                   </v-card-actions>
@@ -153,6 +186,61 @@
         </v-row>
       </v-container>
     </v-main>
+    <v-dialog
+      v-model="dialog"
+      fullscreen
+      hide-overlay
+      dark
+      transition="dialog-bottom-transition"
+    >
+      <v-card>
+        <v-toolbar dark color="primary">
+          <v-btn icon dark @click="dialog = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+          <v-toolbar-title
+            >{{ selectedEvent.name }} Reservation</v-toolbar-title
+          >
+          <v-spacer></v-spacer>
+          <v-toolbar-items>
+            <v-btn dark text @click="dialog = false"> Reserve </v-btn>
+          </v-toolbar-items>
+        </v-toolbar>
+        <v-list>
+          <v-list-item>
+            <v-list-item-content>
+              <h2>Reservation Details</h2>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-content>
+              <p>Start: {{ selectedEvent.start }}</p>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-content>
+              <p>End: {{ selectedEvent.end }}</p>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-content>
+              <p>Machine: {{ selectedEvent.name }}</p>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+        <v-divider></v-divider>
+        <v-list three-line subheader>
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title>Reservation Policies</v-list-item-title>
+              <v-list-item-subtitle
+                >Thou shalt show up on time. No-shows shall be publicly shamed.</v-list-item-subtitle
+              >
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -170,6 +258,10 @@ export default {
     },
     selectedEvent: {},
     machine: "all",
+    dialog: false,
+    notifications: false,
+    sound: true,
+    widgets: false,
     selectedElement: null,
     selectedOpen: false,
     events: [],
