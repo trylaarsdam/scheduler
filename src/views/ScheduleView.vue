@@ -42,24 +42,6 @@
           <v-col>
             <v-sheet height="64">
               <v-toolbar flat dark>
-                <v-btn
-                  outlined
-                  dark
-                  class="mr-4"
-                  @click="setToday"
-                >
-                  Today
-                </v-btn>
-                <v-btn dark fab text small @click="prev">
-                  <v-icon small> mdi-chevron-left </v-icon>
-                </v-btn>
-                <v-btn fab text small dark @click="next">
-                  <v-icon small> mdi-chevron-right </v-icon>
-                </v-btn>
-                <v-toolbar-title v-if="$refs.calendar">
-                  {{ $refs.calendar.title }}
-                </v-toolbar-title>
-                <v-spacer></v-spacer>
                 <v-menu bottom right>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn
@@ -67,6 +49,7 @@
                       dark
                       v-bind="attrs"
                       v-on="on"
+                      style="margin-right: 2%"
                     >
                       <span>{{ typeToLabel[type] }}</span>
                       <v-icon right> mdi-menu-down </v-icon>
@@ -81,6 +64,35 @@
                     </v-list-item>
                   </v-list>
                 </v-menu>
+                <v-btn outlined dark class="mr-4" @click="setToday">
+                  Today
+                </v-btn>
+                <v-btn dark fab text small @click="prev">
+                  <v-icon small> mdi-chevron-left </v-icon>
+                </v-btn>
+                <v-btn fab text small dark @click="next">
+                  <v-icon small> mdi-chevron-right </v-icon>
+                </v-btn>
+                <v-toolbar-title v-if="$refs.calendar">
+                  {{ $refs.calendar.title }}
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-menu bottom right>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn outlined dark v-bind="attrs" v-on="on">
+                      <span>{{ machine }}</span>
+                      <v-icon right> mdi-menu-down </v-icon>
+                    </v-btn>
+                  </template>
+                  <v-list>
+                    <v-list-item @click="machine = 'lathe'">
+                      <v-list-item-title>Lathe</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="machine = 'mill'">
+                      <v-list-item-title>Mill</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
               </v-toolbar>
             </v-sheet>
             <v-sheet min-height="25vh" max-height="30vh" rounded="lg">
@@ -90,7 +102,7 @@
                 style="height: 80vh"
                 first-time="07:00"
                 v-model="focus"
-                :events="events"
+                :events="shownEvents"
                 :event-color="getEventColor"
                 :type="type"
                 @click:event="showEvent"
@@ -118,9 +130,15 @@
                     </v-btn>
                   </v-toolbar>
                   <v-card-text>
-                    <span v-html="selectedEvent.details"></span>
+                    <span
+                      >Start: {{ selectedEvent.start }}<br />End:
+                      {{ selectedEvent.end }}</span
+                    >
                   </v-card-text>
                   <v-card-actions>
+                    <v-btn text color="primary" @click="selectedOpen = false">
+                      Reserve
+                    </v-btn>
                     <v-btn text color="secondary" @click="selectedOpen = false">
                       Cancel
                     </v-btn>
@@ -148,9 +166,11 @@ export default {
       // "4day": "4 Days",
     },
     selectedEvent: {},
+    machine: "lathe",
     selectedElement: null,
     selectedOpen: false,
     events: [],
+    shownEvents: [],
     colors: [
       "blue",
       "indigo",
@@ -160,19 +180,23 @@ export default {
       "orange",
       "grey darken-1",
     ],
-    names: [
-      "Meeting",
-      "Holiday",
-      "PTO",
-      "Travel",
-      "Event",
-      "Birthday",
-      "Conference",
-      "Party",
-    ],
+    names: ["Lathe 1", "Lathe 2", "Mill 1", "Mill 2", "Mill 3", "CNC"],
   }),
   mounted() {
     this.$refs.calendar.checkChange();
+  },
+  watch: {
+    machine: function () {
+      if (this.machine == "all") {
+        this.shownEvents = this.events;
+      } else {
+        this.shownEvents = this.events.filter((event) => {
+          // console.log(event)
+          return event.name.toLowerCase().includes(this.machine);
+        });
+      }
+      this.$refs.calendar.checkChange();
+    },
   },
   methods: {
     viewDay({ date }) {
@@ -181,6 +205,11 @@ export default {
     },
     getEventColor(event) {
       return event.color;
+    },
+    filterEvents() {
+      this.shownevents = this.events.filter((event) =>
+        event.includes(this.machine)
+      );
     },
     setToday() {
       this.focus = "";
