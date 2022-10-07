@@ -85,6 +85,9 @@
                     </v-btn>
                   </template>
                   <v-list>
+                  <v-list-item @click="machine = 'all'">
+                      <v-list-item-title>All Machines</v-list-item-title>
+                    </v-list-item>
                     <v-list-item @click="machine = 'lathe'">
                       <v-list-item-title>Lathe</v-list-item-title>
                     </v-list-item>
@@ -166,7 +169,7 @@ export default {
       // "4day": "4 Days",
     },
     selectedEvent: {},
-    machine: "lathe",
+    machine: "all",
     selectedElement: null,
     selectedOpen: false,
     events: [],
@@ -184,6 +187,7 @@ export default {
   }),
   mounted() {
     this.$refs.calendar.checkChange();
+    this.filterEvents();
   },
   watch: {
     machine: function () {
@@ -207,9 +211,15 @@ export default {
       return event.color;
     },
     filterEvents() {
-      this.shownevents = this.events.filter((event) =>
-        event.includes(this.machine)
-      );
+      if (this.machine == "all") {
+        this.shownEvents = this.events;
+      } else {
+        this.shownEvents = this.events.filter((event) => {
+          // console.log(event)
+          return event.name.toLowerCase().includes(this.machine);
+        });
+      }
+      this.$refs.calendar.checkChange();
     },
     setToday() {
       this.focus = "";
