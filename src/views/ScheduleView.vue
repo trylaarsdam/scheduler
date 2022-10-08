@@ -24,33 +24,11 @@
                 <v-list-item><h2>Your Quotas</h2></v-list-item>
                 <v-list-item link dark v-for="quota in quotas" :key="quota.id">
                   <v-list-item-content>
-                    <v-list-item-title> {{quota.type}}: {{quota.total - quota.remaining}}hr/{{quota.total}}hr </v-list-item-title>
+                    <v-list-item-title> {{quota.type}}: {{quota.remaining}}hr/{{quota.total}}hr </v-list-item-title>
                     <v-progress-linear
                       color="teal"
                       buffer-value="0"
                       :value="quota.remaining / quota.total * 100"
-                      stream
-                    ></v-progress-linear>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link dark>
-                  <v-list-item-content>
-                    <v-list-item-title> Mill: 2hr/2hr </v-list-item-title>
-                    <v-progress-linear
-                      color="teal"
-                      buffer-value="0"
-                      value="100"
-                      stream
-                    ></v-progress-linear>
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item link dark>
-                  <v-list-item-content>
-                    <v-list-item-title> CNC: 0hr/2hr </v-list-item-title>
-                    <v-progress-linear
-                      color="teal"
-                      buffer-value="0"
-                      value="0"
                       stream
                     ></v-progress-linear>
                   </v-list-item-content>
@@ -298,8 +276,13 @@ export default {
   },
   methods: {
     async getQuotas() {
+      const machine = require("../interface/getMachines")
       const quota = require("../interface/quotas")
+      const types = await machine.getTypes()
       this.quotas = await quota.getQuotas()
+      for(var index in this.quotas) {
+        this.quotas[index].type = types.filter(type => type.id == this.quotas[index].type)[0].name
+      }
     },
     viewDay({ date }) {
       this.focus = date;
