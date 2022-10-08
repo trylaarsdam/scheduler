@@ -21,14 +21,14 @@
           <v-col cols="2">
             <v-sheet rounded="lg" dark>
               <v-list color="transparent" dark>
-                <v-list-item><h2>Your Quota</h2></v-list-item>
-                <v-list-item link dark>
+                <v-list-item><h2>Your Quotas</h2></v-list-item>
+                <v-list-item link dark v-for="quota in quotas" :key="quota.id">
                   <v-list-item-content>
-                    <v-list-item-title> Lathe: 1hr/2hr </v-list-item-title>
+                    <v-list-item-title> {{quota.type}}: {{quota.total - quota.remaining}}hr/{{quota.total}}hr </v-list-item-title>
                     <v-progress-linear
                       color="teal"
                       buffer-value="0"
-                      value="50"
+                      :value="quota.remaining / quota.total * 100"
                       stream
                     ></v-progress-linear>
                   </v-list-item-content>
@@ -258,6 +258,7 @@ export default {
     },
     selectedEvent: {},
     machine: "all",
+    quotas: [],
     dialog: false,
     notifications: false,
     sound: true,
@@ -280,6 +281,7 @@ export default {
   mounted() {
     this.$refs.calendar.checkChange();
     this.filterEvents();
+    this.getQuotas()
   },
   watch: {
     machine: function () {
@@ -295,6 +297,10 @@ export default {
     },
   },
   methods: {
+    async getQuotas() {
+      const quota = require("../interface/quotas")
+      this.quotas = await quota.getQuotas()
+    },
     viewDay({ date }) {
       this.focus = date;
       this.type = "day";
