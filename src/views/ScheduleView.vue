@@ -83,6 +83,7 @@
                   {{ $refs.calendar.title }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
+                
                 <v-menu bottom right>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn outlined dark v-bind="attrs" v-on="on">
@@ -139,6 +140,9 @@
                     </v-btn>
                   </v-toolbar>
                   <v-card-text>
+                    <div :v-if="selectedEvent.reserved != true">
+                      <span><b style="color: red;">This timeslot is already occupied</b></span>
+                    </div>
                     <span
                       >Start: {{ selectedEvent.start }}<br />End:
                       {{ selectedEvent.end }}</span
@@ -147,6 +151,7 @@
                   <v-card-actions>
                     <v-btn
                       text
+                      v-if="selectedEvent.reserved != true"
                       color="primary"
                       @click="selectedOpen = false"
                       @click.stop="dialog = true"
@@ -154,7 +159,7 @@
                       Reserve
                     </v-btn>
                     <v-btn text dark color="red" @click="selectedOpen = false">
-                      Cancel
+                      Close
                     </v-btn>
                   </v-card-actions>
                 </v-card>
@@ -256,13 +261,15 @@ export default {
     ],
     names: ["Lathe 1", "Lathe 2", "Mill 1", "Mill 2", "Mill 3", "CNC"],
   }),
-  mounted() {
+  async mounted() {
+    await this.updateRange();
     this.$refs.calendar.checkChange();
     this.filterEvents();
     this.getQuotas()
   },
   watch: {
     machine: function () {
+      console.log(this.events)
       if (this.machine == "all") {
         this.shownEvents = this.events;
       } else {
@@ -329,37 +336,12 @@ export default {
 
       nativeEvent.stopPropagation();
     },
-    updateRange({ start, end }) {
-      const events = [];
+    async updateRange() {
+      var events = await require("../interface/reservations").getAllReservations()
 
-      const min = new Date(`${start.date}T00:00:00`);
-      const max = new Date(`${end.date}T23:59:59`);
-      const days = (max.getTime() - min.getTime()) / 86400000;
-      const eventCount = this.rnd(days, days + 20);
+      
 
-      for (let i = 0; i < eventCount; i++) {
-        const allDay = false;
-        const firstTimestamp = this.rnd(min.getTime(), max.getTime());
-        const first = new Date(firstTimestamp - (firstTimestamp % 900000));
-        const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000;
-        const second = new Date(first.getTime() + secondTimestamp);
-
-        events.push({
-          name: this.names[this.rnd(0, this.names.length - 1)],
-          start: first,
-          end: second,
-          color: this.colors[this.rnd(0, this.colors.length - 1)],
-          timed: !allDay,
-        });
-        events.push({
-          name: this.names[this.rnd(0, this.names.length - 1)],
-          start: first,
-          end: second,
-          color: this.colors[this.rnd(0, this.colors.length - 1)],
-          timed: !allDay,
-        });
-      }
-
+      this.events = []
       this.events = events;
     },
     rnd(a, b) {

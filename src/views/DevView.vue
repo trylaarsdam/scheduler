@@ -54,6 +54,13 @@
         </v-list-item-content>
       </v-card>
     </v-list-item>
+    <v-list-item style="margin: 1%" flat>
+      <v-card style="padding: 2%">
+        <v-list-item-content>
+          <v-btn color="primary" @click="getAvailability">Get Availability</v-btn>
+        </v-list-item-content>
+      </v-card>
+    </v-list-item>
   </div>
 </template>
 
@@ -101,6 +108,12 @@ export default {
       const quotas = require("../interface/quotas")
 
       var result = await quotas.updateQuotaOffset(null, this.machine, 1)
+      alert(JSON.stringify(result))
+    },
+    async getAvailability() {
+      const reservations = require("../interface/reservations")
+
+      var result = await reservations.getAvailability()
       alert(JSON.stringify(result))
     }
   },
