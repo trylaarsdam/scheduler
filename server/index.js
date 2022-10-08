@@ -16,6 +16,8 @@ app.use(express.static(path.join(__dirname, "..", "dist")));
 const client = new PocketBase('http://127.0.0.1:8090');
 client.admins.authViaEmail(require("./credentials.json").email, require("./credentials.json").password);
 
+module.exports = {client}
+
 // route /api/users to ./routes/users.js
 app.use((req, res, next) => { //send all other requests to react app
   res.sendFile(path.join(__dirname, "..", "dist", "index.html"));
