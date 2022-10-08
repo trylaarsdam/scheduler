@@ -140,7 +140,7 @@
                     </v-btn>
                   </v-toolbar>
                   <v-card-text>
-                    <div :v-if="selectedEvent.reserved != true">
+                    <div v-if="selectedEvent.reserved == true">
                       <span><b style="color: red;">This timeslot is already occupied</b></span>
                     </div>
                     <span
@@ -338,8 +338,8 @@ export default {
     },
     async updateRange() {
       var events = await require("../interface/reservations").getAllReservations()
-
-      
+      var openSlots = await require("../interface/reservations").getReservationsForWeek()
+      events = [...events, ...openSlots]
 
       this.events = []
       this.events = events;
