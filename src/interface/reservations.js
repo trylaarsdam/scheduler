@@ -81,18 +81,24 @@ async function getReservationsForWeek() {
             var reservationStart = DateTime.fromFormat(r.start, dateFormat)
             var reservationEnd = DateTime.fromFormat(r.end, dateFormat)
 
-            // console.log(`Res Start: ${reservationStart.toISO()}`)
-            // console.log(`Start: ${startTime.toISO()}`)
-            // console.log(`End: ${startTime.plus({minutes: machine.duration}).toISO()}`)
-            // console.log(`Res End: ${reservationEnd.toISO()}`)
+            console.log(`Res Start: ${reservationStart.toISO()}`)
+            console.log(`Start: ${startTime.toISO()}`)
+            console.log(`End: ${startTime.plus({minutes: machine.duration}).toISO()}`)
+            console.log(`Res End: ${reservationEnd.toISO()}`)
 
-            if((reservationStart >= startTime) && (reservationStart < startTime.plus({minutes: machine.duration}))) {
+            if((reservationStart > startTime) && (reservationStart < startTime.plus({minutes: machine.duration}))) {
               console.log("Reservation conflict @ " + startTime.toISO())
               reserved = true
               break;
             }
 
-            if((reservationEnd > startTime) && (reservationEnd <= startTime.plus({minutes: machine.duration}))) {
+            if((reservationEnd > startTime) && (reservationEnd < startTime.plus({minutes: machine.duration}))) {
+              console.log("Reservation conflict @ " + startTime.toISO())
+              reserved = true
+              break;
+            }
+
+            if(reservationStart.toISO() == startTime.toISO() || reservationEnd.toISO() == startTime.plus({minutes: machine.duration}).toISO()) {
               console.log("Reservation conflict @ " + startTime.toISO())
               reserved = true
               break;
