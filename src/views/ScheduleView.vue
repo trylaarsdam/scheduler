@@ -3,7 +3,10 @@
     <v-app-bar app flat dark>
       <v-container class="py-0 fill-height">
         <v-avatar class="mr-10" tile size="42">
-          <img src="https://toddr.org/assets/images/t-logo.png" alt="Todd Rylaarsdam" />
+          <img
+            src="https://toddr.org/assets/images/t-logo.png"
+            alt="Todd Rylaarsdam"
+          />
         </v-avatar>
 
         <v-btn v-for="link in links" :key="link" text>
@@ -32,7 +35,7 @@
                       }}hr
                     </v-list-item-title>
                     <v-progress-linear
-                      color="teal"
+                      color="primary"
                       buffer-value="0"
                       :value="(quota.remaining / quota.total) * 100"
                       stream
@@ -44,7 +47,12 @@
 
                 <v-list-item link color="grey lighten-4" @click="refreshCal">
                   <v-list-item-content>
-                    <v-list-item-title> Refresh </v-list-item-title>
+                    <v-list-item-title v-if="!loading">
+                      Refresh
+                    </v-list-item-title>
+                    <v-list-item-title v-else
+                      ><v-progress-circular indeterminate
+                    /></v-list-item-title>
                   </v-list-item-content>
                 </v-list-item>
               </v-list>
@@ -186,6 +194,9 @@
       dark
       transition="dialog-bottom-transition"
     >
+      <v-overlay :value="loading">
+        <v-progress-circular indeterminate size="64"></v-progress-circular>
+      </v-overlay>
       <v-card>
         <v-toolbar dark color="primary">
           <v-btn icon dark @click="dialog = false">
@@ -196,7 +207,7 @@
           >
           <v-spacer></v-spacer>
           <v-toolbar-items>
-            <v-btn dark text @click="dialog = false"> Reserve </v-btn>
+            <v-btn dark text @click="reserveEvent"> Reserve </v-btn>
           </v-toolbar-items>
         </v-toolbar>
         <v-list>
@@ -255,6 +266,7 @@ export default {
     quotas: [],
     dialog: false,
     notifications: false,
+    loading: false,
     sound: true,
     widgets: false,
     selectedElement: null,
@@ -293,11 +305,37 @@ export default {
     },
   },
   methods: {
-    async refreshCal() {
+    async reserveEvent() {
+      const reservations = require("../interface/reservations");
+      this.loading = true;
+
+      try {
+        await reservations.createReservation(
+          this.selectedEvent.start,
+          this.selectedEvent.end,
+          this.selectedEvent.machine
+        );
+      } catch (err) {
+        console.log(err);
+        alert("Error reserving event: " + err);
+      }
+
+      // update ui
       await this.updateRange();
       this.$refs.calendar.checkChange();
       this.filterEvents();
       this.getQuotas();
+
+      this.loading = false;
+      this.dialog = false;
+    },
+    async refreshCal() {
+      this.loading = true;
+      await this.updateRange();
+      this.$refs.calendar.checkChange();
+      this.filterEvents();
+      this.getQuotas();
+      this.loading = false;
     },
     async getQuotas() {
       const machine = require("../interface/getMachines");

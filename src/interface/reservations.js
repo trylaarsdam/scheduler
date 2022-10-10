@@ -4,7 +4,21 @@ const { DateTime } = require("luxon");
 const dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
 const client = require("./pocketbase").client
 
-module.exports = {getAllReservations, getAvailability, getReservationsForWeek}
+module.exports = {getAllReservations, getAvailability, getReservationsForWeek, createReservation}
+
+async function createReservation(start, end, machine) {
+  console.log("Start: " + start)
+  console.log("End: " + end) 
+  let reservation = await client.records.create("reservations", {
+    start: DateTime.fromJSDate(start).toISO(),
+    end: DateTime.fromJSDate(end).toISO(),
+    machine: machine,
+    uses_quota: true,
+    user: client.authStore.model.id
+  })
+
+  return reservation
+}
 
 async function getAllReservations() {
   let reservations = await client.records.getFullList(
@@ -24,10 +38,13 @@ async function getAllReservations() {
   var calendarEvents = []
 
   for(var reservation of reservations) {
+    console.log("Start: " + DateTime.fromFormat(reservation.start, dateFormat, {zone: "utc"}).toLocal().toISO())
+    console.log("End: " + reservation.end)
     calendarEvents.push({
       name: machines.filter((m) => m.id == reservation.machine)[0].name,
-      start: new Date(reservation.start),
-      end: new Date(reservation.end),
+      machine: reservation.machine,
+      start: DateTime.fromFormat(reservation.start, dateFormat, {zone: "utc"}).toLocal().toJSDate(),
+      end: DateTime.fromFormat(reservation.end, dateFormat, {zone: "utc"}).toLocal().toJSDate(),
       color: "red",
       timed: true,
       reserved: true
@@ -77,14 +94,16 @@ async function getReservationsForWeek() {
         let reserved = false
         for (var r of reservations) {
           if(r.machine == machine.id) {
-            console.log("step 1")
-            var reservationStart = DateTime.fromFormat(r.start, dateFormat)
-            var reservationEnd = DateTime.fromFormat(r.end, dateFormat)
-
-            console.log(`Res Start: ${reservationStart.toISO()}`)
-            console.log(`Start: ${startTime.toISO()}`)
-            console.log(`End: ${startTime.plus({minutes: machine.duration}).toISO()}`)
-            console.log(`Res End: ${reservationEnd.toISO()}`)
+            // console.log("step 1")
+            var reservationStart = DateTime.fromFormat(r.start, dateFormat, {zone: "utc"}).toLocal()
+            var reservationEnd = DateTime.fromFormat(r.end, dateFormat, {zone: "utc"}).toLocal()
+            
+            // console.log("Res: " + r.start)
+            // console.log(`Res Start: ${reservationStart.toISO()}`)
+            // console.log(`Start: ${startTime.toISO()}`)
+            // console.log(`End: ${startTime.plus({minutes: machine.duration}).toISO()}`)
+            // console.log(`Res End: ${reservationEnd.toISO()}`)
+            // console.log("\n")
 
             if((reservationStart > startTime) && (reservationStart < startTime.plus({minutes: machine.duration}))) {
               console.log("Reservation conflict @ " + startTime.toISO())
@@ -111,8 +130,9 @@ async function getReservationsForWeek() {
             name: machine.name,
             start: startTime.toJSDate(),
             end: startTime.plus({minutes: machine.duration}).toJSDate(),
-            color: "blue",
+            color: "primary",
             timed: true,
+            machine: machine.id,
             reserved: false
           })
         }
