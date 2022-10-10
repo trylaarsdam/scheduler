@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const { DateTime } = require("luxon");
 
+const dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
 const client = require("./pocketbase").client
 
 module.exports = {getAllReservations, getAvailability, getReservationsForWeek}
@@ -27,7 +28,7 @@ async function getAllReservations() {
       name: machines.filter((m) => m.id == reservation.machine)[0].name,
       start: new Date(reservation.start),
       end: new Date(reservation.end),
-      color: "gray",
+      color: "red",
       timed: true,
       reserved: true
     });
@@ -77,11 +78,22 @@ async function getReservationsForWeek() {
         for (var r of reservations) {
           if(r.machine == machine.id) {
             console.log("step 1")
-            console.log(r.start)
-            console.log(startTime.toISO())
-            console.log(r.end)
-            if(DateTime.fromISO(r.start) <= startTime && DateTime.fromISO(r.end) >= startTime) {
-              console.log("step 2")
+            var reservationStart = DateTime.fromFormat(r.start, dateFormat)
+            var reservationEnd = DateTime.fromFormat(r.end, dateFormat)
+
+            // console.log(`Res Start: ${reservationStart.toISO()}`)
+            // console.log(`Start: ${startTime.toISO()}`)
+            // console.log(`End: ${startTime.plus({minutes: machine.duration}).toISO()}`)
+            // console.log(`Res End: ${reservationEnd.toISO()}`)
+
+            if((reservationStart >= startTime) && (reservationStart < startTime.plus({minutes: machine.duration}))) {
+              console.log("Reservation conflict @ " + startTime.toISO())
+              reserved = true
+              break;
+            }
+
+            if((reservationEnd > startTime) && (reservationEnd <= startTime.plus({minutes: machine.duration}))) {
+              console.log("Reservation conflict @ " + startTime.toISO())
               reserved = true
               break;
             }

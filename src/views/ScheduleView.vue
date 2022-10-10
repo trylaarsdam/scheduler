@@ -2,7 +2,9 @@
   <v-app id="schedule">
     <v-app-bar app flat dark>
       <v-container class="py-0 fill-height">
-        <v-avatar class="mr-10" color="grey darken-1" size="32"></v-avatar>
+        <v-avatar class="mr-10" tile size="42">
+          <img src="https://toddr.org/assets/images/t-logo.png" alt="Todd Rylaarsdam" />
+        </v-avatar>
 
         <v-btn v-for="link in links" :key="link" text>
           {{ link }}
@@ -24,11 +26,15 @@
                 <v-list-item><h2>Your Quotas</h2></v-list-item>
                 <v-list-item link dark v-for="quota in quotas" :key="quota.id">
                   <v-list-item-content>
-                    <v-list-item-title> {{quota.type}}: {{quota.remaining}}hr/{{quota.total}}hr </v-list-item-title>
+                    <v-list-item-title>
+                      {{ quota.type }}: {{ quota.remaining }}hr/{{
+                        quota.total
+                      }}hr
+                    </v-list-item-title>
                     <v-progress-linear
                       color="teal"
                       buffer-value="0"
-                      :value="quota.remaining / quota.total * 100"
+                      :value="(quota.remaining / quota.total) * 100"
                       stream
                     ></v-progress-linear>
                   </v-list-item-content>
@@ -36,7 +42,7 @@
 
                 <v-divider class="my-2"></v-divider>
 
-                <v-list-item link color="grey lighten-4">
+                <v-list-item link color="grey lighten-4" @click="refreshCal">
                   <v-list-item-content>
                     <v-list-item-title> Refresh </v-list-item-title>
                   </v-list-item-content>
@@ -83,7 +89,7 @@
                   {{ $refs.calendar.title }}
                 </v-toolbar-title>
                 <v-spacer></v-spacer>
-                
+
                 <v-menu bottom right>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn outlined dark v-bind="attrs" v-on="on">
@@ -141,7 +147,11 @@
                   </v-toolbar>
                   <v-card-text>
                     <div v-if="selectedEvent.reserved == true">
-                      <span><b style="color: red;">This timeslot is already occupied</b></span>
+                      <span
+                        ><b style="color: red"
+                          >This timeslot is already occupied</b
+                        ></span
+                      >
                     </div>
                     <span
                       >Start: {{ selectedEvent.start }}<br />End:
@@ -217,7 +227,8 @@
             <v-list-item-content>
               <v-list-item-title>Reservation Policies</v-list-item-title>
               <v-list-item-subtitle
-                >Thou shalt show up on time. No-shows shall be publicly shamed.</v-list-item-subtitle
+                >Thou shalt show up on time. No-shows shall be publicly
+                shamed.</v-list-item-subtitle
               >
             </v-list-item-content>
           </v-list-item>
@@ -265,11 +276,11 @@ export default {
     await this.updateRange();
     this.$refs.calendar.checkChange();
     this.filterEvents();
-    this.getQuotas()
+    this.getQuotas();
   },
   watch: {
     machine: function () {
-      console.log(this.events)
+      console.log(this.events);
       if (this.machine == "all") {
         this.shownEvents = this.events;
       } else {
@@ -282,13 +293,21 @@ export default {
     },
   },
   methods: {
+    async refreshCal() {
+      await this.updateRange();
+      this.$refs.calendar.checkChange();
+      this.filterEvents();
+      this.getQuotas();
+    },
     async getQuotas() {
-      const machine = require("../interface/getMachines")
-      const quota = require("../interface/quotas")
-      const types = await machine.getTypes()
-      this.quotas = await quota.getQuotas()
-      for(var index in this.quotas) {
-        this.quotas[index].type = types.filter(type => type.id == this.quotas[index].type)[0].name
+      const machine = require("../interface/getMachines");
+      const quota = require("../interface/quotas");
+      const types = await machine.getTypes();
+      this.quotas = await quota.getQuotas();
+      for (var index in this.quotas) {
+        this.quotas[index].type = types.filter(
+          (type) => type.id == this.quotas[index].type
+        )[0].name;
       }
     },
     viewDay({ date }) {
@@ -337,11 +356,13 @@ export default {
       nativeEvent.stopPropagation();
     },
     async updateRange() {
-      var events = await require("../interface/reservations").getAllReservations()
-      var openSlots = await require("../interface/reservations").getReservationsForWeek()
-      events = [...events, ...openSlots]
+      var events =
+        await require("../interface/reservations").getAllReservations();
+      var openSlots =
+        await require("../interface/reservations").getReservationsForWeek();
+      events = [...events, ...openSlots];
 
-      this.events = []
+      this.events = [];
       this.events = events;
     },
     rnd(a, b) {
