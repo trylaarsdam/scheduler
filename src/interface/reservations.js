@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
 const { DateTime } = require("luxon");
+const quotas = require("./quotas")
+const getMachines = require("./getMachines")
 
 const dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
 const client = require("./pocketbase").client
@@ -7,8 +9,15 @@ const client = require("./pocketbase").client
 module.exports = {getAllReservations, getAvailability, getReservationsForWeek, createReservation}
 
 async function createReservation(start, end, machine) {
-  console.log("Start: " + start)
-  console.log("End: " + end) 
+  console.log("Start: " + typeof start)
+  console.log("End: " + typeof end) 
+
+  var machineType = (await getMachines.getMachine(machine)).type
+  console.log("Machine Type: " + machineType)
+  console.log("Remaining: " + (end - start))
+
+  quotas.updateQuotaOffset(client.authStore.model.id, machineType, -(end - start) / 3600000)
+
   let reservation = await client.records.create("reservations", {
     start: DateTime.fromJSDate(start).toISO(),
     end: DateTime.fromJSDate(end).toISO(),
